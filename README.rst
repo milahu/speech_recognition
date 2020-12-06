@@ -1,10 +1,7 @@
-SpeechRecognition
-=================
-
 speech-recognition-fork
 =======================
 
-This is a Fork of [SpeechRecognition](https://pypi.org/project/speechrecognition/).  I have not personally written any
+This is a Fork of `SpeechRecognition <https://pypi.org/project/speechrecognition/>`__.  I have not personally written any
 code for it, but since no PRs have been merged into the main project in at least 2 years...I figured I would fork it,
 so I could merge and use some of them.
 
@@ -12,6 +9,9 @@ If you open a PR on this repo, I'm likely to merge it, providing it doesn't brea
 an expert with any of the pieces used, but I'm hoping others can benefit from an itch I scratched.
 
 ----
+
+SpeechRecognition
+=================
 
 .. image:: https://img.shields.io/pypi/v/speech-recognition-fork.svg
     :target: https://pypi.python.org/pypi/speech-recognition-fork/
