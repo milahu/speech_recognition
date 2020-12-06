@@ -1,25 +1,33 @@
 SpeechRecognition
 =================
 
-.. image:: https://img.shields.io/pypi/v/SpeechRecognition.svg
-    :target: https://pypi.python.org/pypi/SpeechRecognition/
+speech-recognition-fork
+=======================
+
+This is a Fork of [SpeechRecognition](https://pypi.org/project/speechrecognition/).  I have not personally written any
+code for it, but since no PRs have been merged into the main project in at least 2 years...I figured I would fork it,
+so I could merge and use some of them.
+
+If you open a PR on this repo, I'm likely to merge it, providing it doesn't break something else.  I don't claim to be
+an expert with any of the pieces used, but I'm hoping others can benefit from an itch I scratched.
+
+----
+
+.. image:: https://img.shields.io/pypi/v/speech-recognition-fork.svg
+    :target: https://pypi.python.org/pypi/speech-recognition-fork/
     :alt: Latest Version
 
-.. image:: https://img.shields.io/pypi/status/SpeechRecognition.svg
-    :target: https://pypi.python.org/pypi/SpeechRecognition/
+.. image:: https://img.shields.io/pypi/status/speech-recognition-fork.svg
+    :target: https://pypi.python.org/pypi/speech-recognition-fork/
     :alt: Development Status
 
-.. image:: https://img.shields.io/pypi/pyversions/SpeechRecognition.svg
-    :target: https://pypi.python.org/pypi/SpeechRecognition/
+.. image:: https://img.shields.io/pypi/pyversions/speech-recognition-fork.svg
+    :target: https://pypi.python.org/pypi/speech-recognition-fork/
     :alt: Supported Python Versions
 
-.. image:: https://img.shields.io/pypi/l/SpeechRecognition.svg
-    :target: https://pypi.python.org/pypi/SpeechRecognition/
+.. image:: https://img.shields.io/pypi/l/speech-recognition-fork.svg
+    :target: https://pypi.python.org/pypi/speech-recognition-fork/
     :alt: License
-
-.. image:: https://api.travis-ci.org/Uberi/speech_recognition.svg?branch=master
-    :target: https://travis-ci.org/Uberi/speech_recognition
-    :alt: Continuous Integration Test Results
 
 Library for performing speech recognition, with support for several engines and APIs, online and offline.
 
@@ -37,13 +45,13 @@ Speech recognition engine/API support:
 * `Tensorflow <https://www.tensorflow.org/>`__
 * `Vosk API <https://github.com/alphacep/vosk-api/>`__ (works offline)
 
-**Quickstart:** ``pip install SpeechRecognition``. See the "Installing" section for more details.
+**Quickstart:** ``pip install speech-recognition-fork``. See the "Installing" section for more details.
 
 To quickly try it out, run ``python -m speech_recognition`` after installing (which additionally requires the ``pyaudio`` package).
 
 Project links:
 
--  `PyPI <https://pypi.python.org/pypi/SpeechRecognition/>`__
+-  `PyPI <https://pypi.python.org/pypi/speech-recognition-fork/>`__
 -  `Source code <https://github.com/Uberi/speech_recognition>`__
 -  `Issue tracker <https://github.com/Uberi/speech_recognition/issues>`__
 
@@ -74,9 +82,9 @@ Installing
 
 First, make sure you have all the requirements listed in the "Requirements" section. 
 
-The easiest way to install this is using ``pip install SpeechRecognition``.
+The easiest way to install this is using ``pip install speech-recognition-fork``.
 
-Otherwise, download the source distribution from `PyPI <https://pypi.python.org/pypi/SpeechRecognition/>`__, and extract the archive.
+Otherwise, download the source distribution from `PyPI <https://pypi.python.org/pypi/speech-recognition-fork/>`__, and extract the archive.
 
 In the folder, run ``python setup.py install``.
 
