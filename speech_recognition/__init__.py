@@ -22,7 +22,7 @@ import time
 import uuid
 
 __author__ = "Anthony Zhang (Uberi)"
-__version__ = "3.8.1.2020.12.06"
+__version__ = "3.8.1.2021.06.14"
 __license__ = "BSD"
 
 try:  # attempt to use the Python 2 modules
