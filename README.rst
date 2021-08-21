@@ -69,7 +69,7 @@ Examples
 
 See the `examples directory <examples>`__ in the repository root for usage examples:
 
--  `Recognize speech input from the microphone <hexamples/microphone_recognition.py>`__
+-  `Recognize speech input from the microphone <examples/microphone_recognition.py>`__
 -  `Transcribe an audio file <examples/audio_transcribe.py>`__
 -  `Save audio data to an audio file <examples/write_audio.py>`__
 -  `Show extended recognition results <examples/extended_results.py>`__
