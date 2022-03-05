@@ -31,6 +31,8 @@ SpeechRecognition
 
 Library for performing speech recognition, with support for several engines and APIs, online and offline.
 
+**UPDATE 2022-02-09**: Hey everyone! This project started as a tech demo, but these days it needs more time than I have to keep up with all the PRs and issues. Therefore, I'd like to put out an **open invite for collaborators** - just reach out at me@anthonyz.ca if you're interested!
+
 Speech recognition engine/API support:
 
 * `CMU Sphinx <http://cmusphinx.sourceforge.net/wiki/>`__ (works offline)
@@ -62,7 +64,7 @@ The `library reference <reference/library-reference.rst>`__ documents every publ
 
 See `Notes on using PocketSphinx <reference/pocketsphinx.rst>`__ for information about installing languages, compiling PocketSphinx, and building language packs from online resources.
 
-You have to install Vosk models for using Vosk. `Here <https://alphacephei.com/vosk/models>`__ are models avaiable. You have to place them in models folder of your project, like "your-project-folder/models/your-vosk-model"
+You have to install Vosk models for using Vosk. `Here <https://alphacephei.com/vosk/models>`__ are models available. You have to place them in models folder of your project, like "your-project-folder/models/your-vosk-model"
 
 Examples
 --------
