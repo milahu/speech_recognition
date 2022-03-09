@@ -20,6 +20,7 @@ import hashlib
 import hmac
 import time
 import uuid
+from multiprocessing.dummy import Pool
 
 __author__ = "Anthony Zhang (Uberi)"
 __version__ = "3.8.1.2021.06.14"
@@ -69,11 +70,14 @@ class Microphone(AudioSource):
     Higher ``sample_rate`` values result in better audio quality, but also more bandwidth (and therefore, slower recognition). Additionally, some CPUs, such as those in older Raspberry Pi models, can't keep up if this value is too high.
 
     Higher ``chunk_size`` values help avoid triggering on rapidly changing ambient noise, but also makes detection less sensitive. This value, generally, should be left at its default.
+
+    Some microphones provide two or more ``channels``, but most of microphones have only one channel of input.
     """
-    def __init__(self, device_index=None, sample_rate=None, chunk_size=1024):
+    def __init__(self, device_index=None, sample_rate=None, chunk_size=1024, channels=1):
         assert device_index is None or isinstance(device_index, int), "Device index must be None or an integer"
         assert sample_rate is None or (isinstance(sample_rate, int) and sample_rate > 0), "Sample rate must be None or a positive integer"
         assert isinstance(chunk_size, int) and chunk_size > 0, "Chunk size must be a positive integer"
+        assert isinstance(channels, int) and channels > 0 and channels < 100, "Channels must be a positive integer between 1 and 99"
 
         # set up PyAudio
         self.pyaudio_module = self.get_pyaudio()
@@ -94,6 +98,7 @@ class Microphone(AudioSource):
         self.SAMPLE_WIDTH = self.pyaudio_module.get_sample_size(self.format)  # size of each sample
         self.SAMPLE_RATE = sample_rate  # sampling rate in Hertz
         self.CHUNK = chunk_size  # number of frames stored in each buffer
+        self.CHANNELS = channels # number of channels provided by the microphone
 
         self.audio = None
         self.stream = None
@@ -175,7 +180,7 @@ class Microphone(AudioSource):
         try:
             self.stream = Microphone.MicrophoneStream(
                 self.audio.open(
-                    input_device_index=self.device_index, channels=1, format=self.format,
+                    input_device_index=self.device_index, channels=self.CHANNELS, format=self.format,
                     rate=self.SAMPLE_RATE, frames_per_buffer=self.CHUNK, input=True,
                 )
             )
@@ -441,7 +446,7 @@ class AudioData(object):
         sample_rate = self.sample_rate if convert_rate is None else convert_rate
         sample_width = self.sample_width if convert_width is None else convert_width
 
-        # the AIFF format is big-endian, so we need to covnert the little-endian raw data to big-endian
+        # the AIFF format is big-endian, so we need to convert the little-endian raw data to big-endian
         if hasattr(audioop, "byteswap"):  # ``audioop.byteswap`` was only added in Python 3.4
             raw_data = audioop.byteswap(raw_data, sample_width)
         else:  # manually reverse the bytes of each sample, which is slower but works well enough as a fallback
@@ -561,6 +566,8 @@ class Recognizer(AudioSource):
         self.phrase_threshold = 0.3  # minimum seconds of speaking audio before we consider the speaking audio a phrase - values below this are ignored (for filtering out clicks and pops)
         self.non_speaking_duration = 0.5  # seconds of non-speaking audio to keep on both sides of the recording
 
+        self.pool = Pool(processes=1) 
+
     def record(self, source, duration=None, offset=None):
         """
         Records up to ``duration`` seconds of audio from ``source`` (an ``AudioSource`` instance) starting at ``offset`` (or at the beginning if not specified) into an ``AudioData`` instance, which it returns.
@@ -670,7 +677,7 @@ class Recognizer(AudioSource):
 
         return b"".join(frames), elapsed_time
 
-    def listen(self, source, timeout=None, phrase_time_limit=None, snowboy_configuration=None):
+    def listen(self, source, timeout=None, phrase_time_limit=None, snowboy_configuration=None, hot_word_callback=None):
         """
         Records a single phrase from ``source`` (an ``AudioSource`` instance) into an ``AudioData`` instance, which it returns.
 
@@ -731,6 +738,8 @@ class Recognizer(AudioSource):
                 snowboy_location, snowboy_hot_word_files = snowboy_configuration
                 buffer, delta_time = self.snowboy_wait_for_hot_word(snowboy_location, snowboy_hot_word_files, source, timeout)
                 elapsed_time += delta_time
+                if hot_word_callback is not None:
+                    self.pool.apply_async(hot_word_callback, [])
                 if len(buffer) == 0: break  # reached end of the stream
                 frames.append(buffer)
 
@@ -1015,7 +1024,7 @@ class Recognizer(AudioSource):
         if "transcript" not in best_hypothesis: raise UnknownValueError()
         return best_hypothesis["transcript"]
 
-    def recognize_google_cloud(self, audio_data, credentials_json=None, language="en-US", preferred_phrases=None, show_all=False):
+    def recognize_google_cloud(self, audio_data, credentials_json=None, language="en-US", preferred_phrases=None, show_all=False, enable_automatic_punctuation=False):
         """
         Performs speech recognition on ``audio_data`` (an ``AudioData`` instance), using the Google Cloud Speech API.
 
@@ -1030,8 +1039,6 @@ class Recognizer(AudioSource):
         Raises a ``speech_recognition.UnknownValueError`` exception if the speech is unintelligible. Raises a ``speech_recognition.RequestError`` exception if the speech recognition operation failed, if the credentials aren't valid, or if there is no Internet connection.
         """
         assert isinstance(audio_data, AudioData), "``audio_data`` must be audio data"
-        if credentials_json is None:
-            assert os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') is not None
         assert isinstance(language, str), "``language`` must be a string"
         assert preferred_phrases is None or all(isinstance(preferred_phrases, (type(""), type(u""))) for preferred_phrases in preferred_phrases), "``preferred_phrases`` must be a list of strings"
 
@@ -1064,6 +1071,9 @@ class Recognizer(AudioSource):
             )]
         if show_all:
             config['enableWordTimeOffsets'] = True  # some useful extra options for when we want all the output
+        # new google cloud speech to text feature: https://cloud.google.com/speech-to-text/docs/reference/rest/v1p1beta1/RecognitionConfig    
+        if enable_automatic_punctuation:
+        	speech_config["enableAutomaticPunctuation"] = True 
 
         opts = {}
         if self.operation_timeout and socket.getdefaulttimeout() is None:
@@ -1397,11 +1407,13 @@ class Recognizer(AudioSource):
             raise UnknownValueError()
         return result['Disambiguation']['ChoiceData'][0]['Transcription']
 
-    def recognize_ibm(self, audio_data, username, password, language="en-US", show_all=False):
+    def recognize_ibm(self, audio_data, username="apikey", password, language="en-US", show_all=False, narrowband=False):
         """
         Performs speech recognition on ``audio_data`` (an ``AudioData`` instance), using the IBM Speech to Text API.
 
         The IBM Speech to Text username and password are specified by ``username`` and ``password``, respectively. Unfortunately, these are not available without `signing up for an account <https://console.ng.bluemix.net/registration/>`__. Once logged into the Bluemix console, follow the instructions for `creating an IBM Watson service instance <https://www.ibm.com/watson/developercloud/doc/getting_started/gs-credentials.shtml>`__, where the Watson service is "Speech To Text". IBM Speech to Text usernames are strings of the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, while passwords are mixed-case alphanumeric strings.
+
+        IBM's cloud services recently switched from a username/password pair to an API key, use the password as API key with default username value of "apikey".
 
         The recognition language is determined by ``language``, an RFC5646 language tag with a dialect like ``"en-US"`` (US English) or ``"zh-CN"`` (Mandarin Chinese), defaulting to US English. The supported language values are listed under the ``model`` parameter of the `audio recognition API documentation <https://www.ibm.com/watson/developercloud/speech-to-text/api/v1/#sessionless_methods>`__, in the form ``LANGUAGE_BroadbandModel``, where ``LANGUAGE`` is the language value.
 
@@ -1417,9 +1429,10 @@ class Recognizer(AudioSource):
             convert_rate=None if audio_data.sample_rate >= 16000 else 16000,  # audio samples should be at least 16 kHz
             convert_width=None if audio_data.sample_width >= 2 else 2  # audio samples should be at least 16-bit
         )
+        band = 'Narrowband' if narrowband else 'Broadband'
         url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?{}".format(urlencode({
             "profanity_filter": "false",
-            "model": "{}_BroadbandModel".format(language),
+            "model": "{}_{}Model".format(language, band),
             "inactivity_timeout": -1,  # don't stop recognizing when the audio stream activity stops
         }))
         request = Request(url, data=flac_data, headers={
